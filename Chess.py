@@ -4,20 +4,20 @@ whitePlaying = True
 gameOver = False
 chessBoardProjection = [['wr', 'wn', 'wb', 'wq', 'wk', 'wb', 'wn', 'wr'],
                         ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
-                        [' ',  ' ',   ' ', ' ',  ' ',  ' ' , ' ' ,  ' '],
-                        [' ',  ' ',   ' ', ' ',  ' ',  ' ' , ' ' ,  ' '],
-                        [' ',  ' ',   ' ', ' ',  ' ',  ' ' , ' ' ,  ' '],
-                        [' ',  ' ',   ' ', ' ',  ' ',  ' ' , ' ' ,  ' '],
+                        [' ',  ' ',   ' ', ' ',  ' ',  ' ', ' ',  ' '],
+                        [' ',  ' ',   ' ', ' ',  ' ',  ' ', ' ',  ' '],
+                        [' ',  ' ',   ' ', ' ',  ' ',  ' ', ' ',  ' '],
+                        [' ',  ' ',   ' ', ' ',  ' ',  ' ', ' ',  ' '],
                         ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
                         ['br', 'bn', 'bb', 'bq', 'bk', 'bb', 'bn', 'br']]
-chessBoard =           [['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖'],
-                        ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
-                        [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
-                        [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
-                        [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
-                        [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
-                        ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
-                        ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜']]
+chessBoard = [['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖'],
+              ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+              [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
+              [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
+              [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
+              [' ',  ' ',  ' ',  ' ', ' ', ' ',  ' ',  ' '],
+              ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+              ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜']]
 
 
 def validateInput(str):
@@ -28,16 +28,15 @@ def validateInput(str):
     else:
         x = ord(str[0]) - 97
         y = ord(str[1]) - 48 - 1
-        print(x)
-        print(y)
-        print(chessBoardProjection[y][x])
         return True
+
 
 def makeMove(x1, x2, y1, y2):
     chessBoardProjection[y2][x2] = chessBoardProjection[y1][x1]
     chessBoardProjection[y1][x1] = ' '
     chessBoard[7 - y2][x2] = chessBoard[7 - y1][x1]
     chessBoard[7 - y1][x1] = ' '
+
 
 def checkPath(x1, x2, y1, y2):
     dy = y2 - y1
@@ -66,10 +65,10 @@ def validateMove(fromField, toField):
     if (chessBoardProjection[y1][x1][0] == ' '):
         return False
     if (chessBoardProjection[y1][x1][0] == 'w' and not whitePlaying)\
-             or (chessBoardProjection[y1][x1][0] == 'b' and whitePlaying):
+            or (chessBoardProjection[y1][x1][0] == 'b' and whitePlaying):
         return False
     if (chessBoardProjection[y2][x2][0] == 'w' and whitePlaying)\
-        or (chessBoardProjection[y2][x2][0] == 'b' and not whitePlaying):
+            or (chessBoardProjection[y2][x2][0] == 'b' and not whitePlaying):
         return False
     dyReal = y2 - y1
     dxReal = x2 - x1
@@ -81,12 +80,23 @@ def validateMove(fromField, toField):
         dy = dyReal / abs(dyReal)
     else:
         dy = dyReal
+    # TODO: Pawn -> Queen, Castle, En passant
+    if chessBoardProjection[y1][x1][1] == 'n':
+        if (abs(dyReal) == 2 and abs(dxReal) == 1) or\
+                (abs(dyReal) == 1 and abs(dxReal) == 2):
+            makeMove(x1, x2, y1, y2)
+            return True
     if not checkPath(x1, x2, y1, y2):
         return False
-    # TODO: IMPLEMENT PAWN FIRST MOVE CORRECTLY, IMPLEMENT PAWN ATTACKING,
-    # TODO: IMPLEMENT PAWN TO QUEEN, IMPLEMENT KNIGHT AND KING MOVES 
     if chessBoardProjection[y1][x1][1] == 'p':
-        if dx != 0:
+        if chessBoardProjection[y2][x2] != ' ':
+            if whitePlaying and dy == abs(dx) and dyReal == 1 and (abs(dxReal) == 1)\
+                    or not whitePlaying and -dy == abs(dx) and dyReal == -1 and abs(dxReal) == 1:
+                makeMove(x1, x2, y1, y2)
+                return True
+            else:
+                return False
+        elif dx != 0:
             return False
         if whitePlaying and y1 != 1 or not whitePlaying and y1 != 6:
             if(abs(dyReal) > 1):
@@ -98,10 +108,10 @@ def validateMove(fromField, toField):
             return True
     elif chessBoardProjection[y1][x1][1] == 'r':
         if(dx == 0 and dy != 0):
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
         elif(dx != 0 and dy == 0):
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
         else:
             return False
@@ -111,21 +121,23 @@ def validateMove(fromField, toField):
         if(abs(dyReal) != abs(dxReal)):
             return False
         else:
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
     elif chessBoardProjection[y1][x1][1] == 'q':
         if(dx == 0 and dy != 0):
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
         elif(dx != 0 and dy == 0):
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
         elif(abs(dyReal) == abs(dxReal)):
-            makeMove(x1,x2,y1,y2)
+            makeMove(x1, x2, y1, y2)
             return True
-
-    print(checkPath(x1, x2, y1, y2))
-    return True
+    elif chessBoardProjection[y1][x1][1] == 'k':
+        if(abs(dxReal) > 1 or abs(dyReal) > 1):
+            makeMove(x1, x2, y1, y2)
+            return True
+    return False
 
 
 def printBoard(chessBoard):
@@ -152,9 +164,8 @@ while(not gameOver):
         if(validateMove(fromField, toField)):
             break
         else:
-            printBoard(chessBoard)
             print("Illegal Move!")
     whitePlaying = not whitePlaying
-    print(validateMove(fromField, toField))
+    print("\033c", end="")
     printBoard(chessBoard)
 printBoard(chessBoard)
