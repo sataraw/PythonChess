@@ -80,7 +80,7 @@ def validateMove(fromField, toField):
         dy = dyReal / abs(dyReal)
     else:
         dy = dyReal
-    # TODO: Pawn -> Queen, Castle, En passant
+    # TODO: Pawn -> Queen, Castle, En passant, AI Opponent
     if chessBoardProjection[y1][x1][1] == 'n':
         if (abs(dyReal) == 2 and abs(dxReal) == 1) or\
                 (abs(dyReal) == 1 and abs(dxReal) == 2):
