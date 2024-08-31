@@ -2,6 +2,11 @@ import re
 
 whitePlaying = True
 gameOver = False
+whiteKingMoved = False
+blackKingMoved = False
+whiteRooksMoved = [False, False]  # [queenside, kingside]
+blackRooksMoved = [False, False]  # [queenside, kingside]
+gameOver = False
 chessBoardProjection = [['wr', 'wn', 'wb', 'wq', 'wk', 'wb', 'wn', 'wr'],
                         ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
                         [' ',  ' ',   ' ', ' ',  ' ',  ' ', ' ',  ' '],
@@ -81,12 +86,35 @@ def validateMove(fromField, toField):
         dy = dyReal / abs(dyReal)
     else:
         dy = dyReal
-    # TODO: Castle, En passant, AI Opponent
-    if chessBoardProjection[y1][x1][1] == 'n':
-        if (abs(dyReal) == 2 and abs(dxReal) == 1) or\
-                (abs(dyReal) == 1 and abs(dxReal) == 2):
+    
+    # Castling
+    if chessBoardProjection[y1][x1][1] == 'k' and abs(dxReal) == 2 and dyReal == 0:
+        if whitePlaying and not whiteKingMoved:
+            if x2 == 2 and not whiteRooksMoved[0]:  # Queenside
+                if checkPath(x1, 0, y1, y1) and not isKingInCheck(whitePlaying) and not isSquareAttacked(x1-1, y1, whitePlaying) and not isSquareAttacked(x1-2, y1, whitePlaying):
+                    castle(x1, y1, x2, y2)
+                    return True
+            elif x2 == 6 and not whiteRooksMoved[1]:  # Kingside
+                if checkPath(x1, 7, y1, y1) and not isKingInCheck(whitePlaying) and not isSquareAttacked(x1+1, y1, whitePlaying) and not isSquareAttacked(x1+2, y1, whitePlaying):
+                    castle(x1, y1, x2, y2)
+                    return True
+        elif not whitePlaying and not blackKingMoved:
+            if x2 == 2 and not blackRooksMoved[0]:  # Queenside
+                if checkPath(x1, 0, y1, y1) and not isKingInCheck(whitePlaying) and not isSquareAttacked(x1-1, y1, whitePlaying) and not isSquareAttacked(x1-2, y1, whitePlaying):
+                    castle(x1, y1, x2, y2)
+                    return True
+            elif x2 == 6 and not blackRooksMoved[1]:  # Kingside
+                if checkPath(x1, 7, y1, y1) and not isKingInCheck(whitePlaying) and not isSquareAttacked(x1+1, y1, whitePlaying) and not isSquareAttacked(x1+2, y1, whitePlaying):
+                    castle(x1, y1, x2, y2)
+                    return True
+    
+    if chessBoardProjection[y1][x1][1] == 'n':  # Knight move
+        if (abs(dxReal) == 2 and abs(dyReal) == 1) or (abs(dxReal) == 1 and abs(dyReal) == 2):
             makeMove(x1, x2, y1, y2)
             return True
+        else:
+            return False
+    
     if not checkPath(x1, x2, y1, y2):
         return False
     if chessBoardProjection[y1][x1][1] == 'p':
@@ -114,11 +142,9 @@ def validateMove(fromField, toField):
                 makeMove(x1, x2, y1, y2)
             return True
     elif chessBoardProjection[y1][x1][1] == 'r':
-        if(dx == 0 and dy != 0):
+        if(dx == 0 and dy != 0) or (dx != 0 and dy == 0):
             makeMove(x1, x2, y1, y2)
-            return True
-        elif(dx != 0 and dy == 0):
-            makeMove(x1, x2, y1, y2)
+            updateRookMoved(x1, y1)
             return True
         else:
             return False
@@ -131,18 +157,13 @@ def validateMove(fromField, toField):
             makeMove(x1, x2, y1, y2)
             return True
     elif chessBoardProjection[y1][x1][1] == 'q':
-        if(dx == 0 and dy != 0):
-            makeMove(x1, x2, y1, y2)
-            return True
-        elif(dx != 0 and dy == 0):
-            makeMove(x1, x2, y1, y2)
-            return True
-        elif(abs(dyReal) == abs(dxReal)):
+        if(dx == 0 and dy != 0) or (dx != 0 and dy == 0) or (abs(dyReal) == abs(dxReal)):
             makeMove(x1, x2, y1, y2)
             return True
     elif chessBoardProjection[y1][x1][1] == 'k':
-        if(abs(dxReal) > 1 or abs(dyReal) > 1):
+        if(abs(dxReal) <= 1 and abs(dyReal) <= 1):
             makeMove(x1, x2, y1, y2)
+            updateKingMoved()
             return True
     return False
 
@@ -169,6 +190,44 @@ def handlePromotion(x1, y1, x2, y2):
             break
         else:
             print("Invalid choice. Please choose q, r, b, or n.")
+def castle(x1, y1, x2, y2):
+    # Move king
+    makeMove(x1, x2, y1, y2)
+    # Move rook
+    if x2 == 2:  # Queenside
+        makeMove(0, 3, y1, y1)
+    else:  # Kingside
+        makeMove(7, 5, y1, y1)
+    updateKingMoved()
+    updateRookMoved(x1, y1)
+
+def updateKingMoved():
+    global whiteKingMoved, blackKingMoved
+    if whitePlaying:
+        whiteKingMoved = True
+    else:
+        blackKingMoved = True
+
+def updateRookMoved(x, y):
+    global whiteRooksMoved, blackRooksMoved
+    if whitePlaying:
+        if x == 0:
+            whiteRooksMoved[0] = True
+        elif x == 7:
+            whiteRooksMoved[1] = True
+    else:
+        if x == 0:
+            blackRooksMoved[0] = True
+        elif x == 7:
+            blackRooksMoved[1] = True
+
+def isKingInCheck(isWhite):
+    # Implement check detection logic here
+    return False
+
+def isSquareAttacked(x, y, isWhite):
+    # Implement square attack detection logic here
+    return False
 
 
 
