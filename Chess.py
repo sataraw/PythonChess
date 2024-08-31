@@ -21,6 +21,7 @@ chessBoard = [['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖'],
 
 
 def validateInput(str):
+    # Checks if a move is legal
     str = str.lower()
     pattern = re.compile("^([a-h][1-8]){1}$")
     if (not bool(pattern.match(str))):
@@ -80,7 +81,7 @@ def validateMove(fromField, toField):
         dy = dyReal / abs(dyReal)
     else:
         dy = dyReal
-    # TODO: Pawn -> Queen, Castle, En passant, AI Opponent
+    # TODO: Castle, En passant, AI Opponent
     if chessBoardProjection[y1][x1][1] == 'n':
         if (abs(dyReal) == 2 and abs(dxReal) == 1) or\
                 (abs(dyReal) == 1 and abs(dxReal) == 2):
@@ -92,7 +93,10 @@ def validateMove(fromField, toField):
         if chessBoardProjection[y2][x2] != ' ':
             if whitePlaying and dy == abs(dx) and dyReal == 1 and (abs(dxReal) == 1)\
                     or not whitePlaying and -dy == abs(dx) and dyReal == -1 and abs(dxReal) == 1:
-                makeMove(x1, x2, y1, y2)
+                if (whitePlaying and y2 == 7) or (not whitePlaying and y2 == 0):
+                    handlePromotion(x1, y1, x2, y2)
+                else:
+                    makeMove(x1, x2, y1, y2)
                 return True
             else:
                 return False
@@ -104,7 +108,10 @@ def validateMove(fromField, toField):
         elif abs(dyReal) > 2:
             return False
         if dyReal > 0 if whitePlaying else dyReal < 0:
-            makeMove(x1, x2, y1, y2)
+            if (whitePlaying and y2 == 7) or (not whitePlaying and y2 == 0):
+                handlePromotion(x1, y1, x2, y2)
+            else:
+                makeMove(x1, x2, y1, y2)
             return True
     elif chessBoardProjection[y1][x1][1] == 'r':
         if(dx == 0 and dy != 0):
@@ -149,8 +156,24 @@ def printBoard(chessBoard):
         print(u'\u2500' * 35)
     print("  | a | b | c | d | e | f | g | h |")
 
+def handlePromotion(x1, y1, x2, y2):
+    while True:
+        piece = input("Choose promotion piece (q: Queen, r: Rook, b: Bishop, n: Knight): ").lower()
+        if piece in ['q', 'r', 'b', 'n']:
+            color = 'w' if whitePlaying else 'b'
+            chessBoardProjection[y2][x2] = color + piece
+            chessBoard[7 - y2][x2] = {'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘'}[piece] if not whitePlaying else \
+                                     {'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞'}[piece]
+            chessBoardProjection[y1][x1] = ' '
+            chessBoard[7 - y1][x1] = ' '
+            break
+        else:
+            print("Invalid choice. Please choose q, r, b, or n.")
+
+
 
 printBoard(chessBoard)
+
 fromField = ' '
 toField = ' '
 while(not gameOver):
